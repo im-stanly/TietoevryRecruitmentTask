@@ -71,6 +71,18 @@ void *analyzer(){
     ///Wątek drugi (Analyzer) przetwarza dane i wylicza zużycie procesa (wyrażone w %) dla każdego rdzenia
     ///procesora widocznego w /proc/stat i wysyła przetworzone dane (zużycie procesora wyrażone w % dla
     ///każdego rdzenia) do wątku trzeciego (Printer)
+
+    long long PrevIdle = (prevReaded->idle) + (prevReaded->iowait);
+    long long Idle = (nowReaded->idle) + (nowReaded->iowait);
+    long long PrevNonIdle = (prevReaded->user) + (prevReaded->nice) + (prevReaded->system) + (prevReaded->irq) 
+                            + (prevReaded->softirq) + (prevReaded->steal);
+    long long NonIdle = (nowReaded->user) + (nowReaded->nice) + (nowReaded->system) + (nowReaded->irq) 
+                        + (nowReaded->softirq) + (nowReaded->steal);
+
+    long long totald = (Idle + NonIdle) - (PrevIdle + PrevNonIdle);
+
+    float CPU_Percentage = (totald - (Idle - PrevIdle))/totald;
+
     return NULL;
 }
 
