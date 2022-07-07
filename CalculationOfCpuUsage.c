@@ -16,6 +16,21 @@ typedef struct CpuData
     unsigned long long guest_nice;
 }CpuData;
 
+CpuData *prevReaded = NULL, *nowReaded = NULL;
+
+void setDefaultValuesCpuData(CpuData *cpuData){
+    cpuData->guest = 0;
+    cpuData->guest_nice = 0;
+    cpuData->idle = 0;
+    cpuData->iowait = 0;
+    cpuData->irq = 0;
+    cpuData->nice = 0;
+    cpuData->softirq = 0;
+    cpuData->steal = 0;
+    cpuData->system = 0;
+    cpuData->user = 0;
+}
+
 void getCpuTime(CpuData *cpuData) {
     FILE* file = fopen("/proc/stat", "r");
     if (file == NULL) {
@@ -40,6 +55,35 @@ void getCpuTime(CpuData *cpuData) {
         &(cpuData->guest), &(cpuData->guest_nice));
 
     return;
+}
+
+void *reader(){
+    ///Pierwszy  wątek  (Reader)  czyta  /proc/stat  i  wysyła  odczytany  ciąg  znaków  (jako  raw  data  lub  jako
+    ///strukturę z polami odczytanymi z pliku np. idle) do wątku drugiego (Analyzer)
+
+    setDefaultValuesCpuData(prevReaded);
+    setDefaultValuesCpuData(nowReaded);
+
+    return NULL;
+}
+
+void *analyzer(){
+    ///Wątek drugi (Analyzer) przetwarza dane i wylicza zużycie procesa (wyrażone w %) dla każdego rdzenia
+    ///procesora widocznego w /proc/stat i wysyła przetworzone dane (zużycie procesora wyrażone w % dla
+    ///każdego rdzenia) do wątku trzeciego (Printer)
+    return NULL;
+}
+
+void *printer(){
+    ///Wątek  trzeci  (Printer)  drukuje  na  ekranie  w  sposób  sformatowany  (format  dowolny,  ważne  aby  był
+    ///przejrzysty) średnie zużycie procesora co sekunde
+
+}
+
+void *watchdog(){
+    /*Wątek czwarty (Watchdog) pilnuje aby program się nie zawiesił. Tzn jeśli wątki nie wyślą informacji
+    przez 2 sekundy o tym, że pracują to program kończy działanie z odpowiednim komunikatem błędu*/
+
 }
 
 int main(){
