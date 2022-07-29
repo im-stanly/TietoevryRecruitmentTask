@@ -65,8 +65,6 @@ void getCpuTime(CpuData *cpuData) {
 }
 
 void *reader(){
-    ///Pierwszy  wątek  (Reader)  czyta  /proc/stat  i  wysyła  odczytany  ciąg  znaków  (jako  raw  data  lub  jako
-    ///strukturę z polami odczytanymi z pliku np. idle) do wątku drugiego (Analyzer)
 
     setDefaultValuesCpuData(prevReaded);
     setDefaultValuesCpuData(nowReaded);
@@ -88,9 +86,6 @@ void *reader(){
 }
 
 void *analyzer(){
-    ///Wątek drugi (Analyzer) przetwarza dane i wylicza zużycie procesa (wyrażone w %) dla każdego rdzenia
-    ///procesora widocznego w /proc/stat i wysyła przetworzone dane (zużycie procesora wyrażone w % dla
-    ///każdego rdzenia) do wątku trzeciego (Printer)
 
     while (1)
     {
@@ -118,8 +113,7 @@ void *analyzer(){
 }
 
 void *printer(){
-    ///Wątek  trzeci  (Printer)  drukuje  na  ekranie  w  sposób  sformatowany  (format  dowolny,  ważne  aby  był
-    ///przejrzysty) średnie zużycie procesora co sekunde
+    
     while (1)
     {
         sem_wait(&semReadyToPrint);
@@ -134,8 +128,6 @@ void *printer(){
 }
 
 void *watchdog(){
-    /*Wątek czwarty (Watchdog) pilnuje aby program się nie zawiesił. Tzn jeśli wątki nie wyślą informacji
-    przez 2 sekundy o tym, że pracują to program kończy działanie z odpowiednim komunikatem błędu*/
     
     int readerCounterOld = readerCounter, analyzerCounterOld = analyzerCounter; 
     int printerCounterOld = printerCounter;
