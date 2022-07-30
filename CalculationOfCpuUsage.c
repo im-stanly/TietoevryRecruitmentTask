@@ -2,7 +2,8 @@
 #include<stdlib.h>
 #include<pthread.h>
 #include<unistd.h>
-#include<semaphore.h> 
+#include<semaphore.h>
+#include <signal.h>
 
 typedef struct CpuData
 {
@@ -69,7 +70,7 @@ void *reader(){
     setDefaultValuesCpuData(prevReaded);
     setDefaultValuesCpuData(nowReaded);
     getCpuTime(nowReaded);
-    usleep(20000);
+    usleep(50000);
 
     while (1)
     {
@@ -78,7 +79,7 @@ void *reader(){
         getCpuTime(nowReaded);
 	    sem_post(&semReadyToAnalyze);
         pthread_mutex_unlock(&cpuDataMutex);
-        usleep(20000);
+        usleep(500000);
         readerCounter++;
     }
     
@@ -118,13 +119,28 @@ void *printer(){
     {
         sem_wait(&semReadyToPrint);
         sleep(1);
-        printf(" \n CPU Percentage = %f \n", CPU_Percentage);
+        printf(" \n CPU Usage Percentage = %.0f %c \n", CPU_Percentage, '%');
         divider = 1;
         CPU_Percentage = 0.0;
         printerCounter++;
     }
     
     return NULL;
+}
+
+void exiting(int response){
+    pthread_mutex_destroy(&cpuDataMutex);
+    sem_destroy(&semReadyToAnalyze);
+    sem_destroy(&semReadyToPrint);
+    if (nowReaded != NULL)
+        free(nowReaded);
+    if (prevReaded != NULL)
+        free(prevReaded);
+    exit(response); 
+}
+
+void handle_sigtstp(int sig){
+
 }
 
 void *watchdog(){
@@ -135,14 +151,11 @@ void *watchdog(){
     while (1)
     {
         sleep(2);
-        if (readerCounterOld == readerCounter || analyzerCounterOld == analyzerCounter
-            || printerCounterOld == printerCounter)
+        if (readerCounterOld != readerCounter || analyzerCounterOld != analyzerCounter
+            || printerCounterOld != printerCounter)
         {
             printf("The threads do not respond in 2 sec. Exiting all process...");
-            pthread_exit(reader);
-            pthread_exit(analyzer);
-            pthread_exit(printer);
-            exit(2);   
+            exiting(2);
         }
         if (readerCounter >= 20000)
             readerCounter = 0;
@@ -161,9 +174,9 @@ void *watchdog(){
     return NULL;
 }
 
-int main(){
-     pthread_t readerT, analyzerT, printerT, watchdogT;
-     pthread_mutex_init(&cpuDataMutex, NULL);
+int main(int argc, char* argv[]){
+    pthread_t readerT, analyzerT, printerT, watchdogT;
+    pthread_mutex_init(&cpuDataMutex, NULL);
 
     sem_init(&semReadyToAnalyze, 0, 0);
     sem_init(&semReadyToPrint, 0, 0);
@@ -180,16 +193,11 @@ int main(){
         pthread_join(printerT, NULL) != 0 || pthread_join(watchdogT, NULL) != 0){
         
         perror("There was an error while pthread_join() in main");
-        if (nowReaded != NULL)
-            free(nowReaded);
-        if (prevReaded != NULL)
-            free(prevReaded);
-
-        pthread_mutex_destroy(&cpuDataMutex);
+        
+        exiting(2);
         return 2;
     }
-    sem_destroy(&semReadyToAnalyze);
-    sem_destroy(&semReadyToPrint);
+    exiting(0);
 
     return 0;
 }
