@@ -66,7 +66,6 @@ void getCpuTime(CpuData *cpuData) {
 }
 
 void *reader(){
-
     setDefaultValuesCpuData(prevReaded);
     setDefaultValuesCpuData(nowReaded);
     getCpuTime(nowReaded);
@@ -87,7 +86,6 @@ void *reader(){
 }
 
 void *analyzer(){
-
     while (1)
     {
         sem_wait(&semReadyToAnalyze);
@@ -114,7 +112,6 @@ void *analyzer(){
 }
 
 void *printer(){
-    
     while (1)
     {
         sem_wait(&semReadyToPrint);
@@ -139,12 +136,7 @@ void exiting(int response){
     exit(response); 
 }
 
-void handle_sigtstp(int sig){
-
-}
-
 void *watchdog(){
-    
     int readerCounterOld = readerCounter, analyzerCounterOld = analyzerCounter; 
     int printerCounterOld = printerCounter;
 
